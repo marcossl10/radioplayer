@@ -1,0 +1,15 @@
+[Desktop Entry]
+Name=Rádio Player Simples
+Comment=Um player de rádio simples feito em Python
+# O comando que foi instalado pelo PKGBUILD
+Exec=radio-player-simples
+# O nome do ícone (sem a extensão .png) que será instalado
+Icon=radio-player-simples
+# Define que é um aplicativo gráfico que roda no terminal (embora não precise do terminal visível)
+Terminal=false
+Type=Application
+# Categorias padrão para aplicativos de áudio/vídeo
+Categories=AudioVideo;Audio;Player;Network;
+# Palavras-chave para busca
+Keywords=radio;stream;music;audio;player;online;
+

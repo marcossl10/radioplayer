@@ -1,0 +1,97 @@
+# /home/marcos/projeto1-pkgbuild/PKGBUILD
+
+# Maintainer: Marcos <seu_email@exemplo.com> # Coloque seu nome e email
+_pkgname=radio-player-simples
+pkgname=python-${_pkgname} # Nome final do pacote
+# Pega a versão do constants.py dinamicamente (ajuste o caminho se necessário)
+# Certifique-se que /home/marcos/projeto1 existe quando o makepkg roda para pegar a versão
+_version=$(awk -F'"' '/^VERSION = "/{print $2}' /home/marcos/projeto1/radio_player/constants.py)
+pkgver=${_version//./} # Versão sem pontos para compatibilidade (ex: 010) - ou use pkgver=$_version se preferir
+pkgrel=1 # Incremente se refizer o pacote sem mudar a versão do código
+pkgdesc="Um player de rádio simples feito em Python com Tkinter e VLC."
+arch=('any')
+url="" # Opcional: URL do seu projeto (GitHub, etc.)
+license=('MIT') # Ou a licença que você colocou no arquivo LICENSE
+# Mover python-sv-ttk para depends se o tema escuro for obrigatório
+depends=('python' 'tk' 'python-vlc' 'python-requests' 'python-sv-ttk')
+optdepends=() # Vazio agora
+makedepends=('python-setuptools')
+# Usando um tarball local e o arquivo .desktop
+source=("projeto1-0.1.0.tar.gz" # Nome do arquivo tarball que você criou
+        "radio-player-simples.desktop") # Adiciona o arquivo .desktop como fonte
+# O checksum será preenchido/atualizado pelo comando 'updpkgsums'
+sha256sums=('bb77016a029864ea802723afd0368746995a5312b59174042f6b16df73119a42'
+            '51d09b3b457f5460f4fb3111bec389371b90d4e35d4164fe2ae102a919edd251')
+
+prepare() {
+    # O tarball será extraído para $srcdir/projeto1 (nome base do tarball sem a versão)
+    cd "$srcdir/projeto1"
+    echo "Verificando diretório de preparação: $(pwd)"
+    ls -la # Lista o conteúdo para depuração
+    echo "Preparando fontes em $(pwd)"
+}
+
+build() {
+    # Nada a compilar para Python puro
+    cd "$srcdir/projeto1"
+    echo "Nada a compilar para Python puro em $(pwd)"
+    ls -la # Lista o conteúdo para depuração
+    # Aqui você poderia adicionar comandos para rodar testes, se tivesse
+    : # Comando vazio (no-op)
+}
+
+package() {
+    # Entra no diretório onde o código fonte foi extraído
+    cd "$srcdir/projeto1"
+    echo "Iniciando empacotamento de $(pwd) para $pkgdir"
+
+    # Diretório de instalação dos módulos Python
+    _pythondir="$pkgdir/usr/lib/python$(python -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')/site-packages"
+    echo "Diretório Python site-packages: $_pythondir"
+
+    # Instalar os módulos Python (o diretório radio_player inteiro)
+    install -d "$_pythondir"
+    # Copia o diretório radio_player que está dentro de $srcdir/projeto1
+    cp -r radio_player "$_pythondir/"
+    echo "Módulo 'radio_player' copiado para $_pythondir"
+
+    # Instalar arquivos de recurso (stations.json padrão)
+    # O ícone agora será instalado no diretório de ícones padrão
+    _datadir="$pkgdir/usr/share/$_pkgname"
+    install -d "$_datadir/assets"
+    # install -Dm644 assets/radio_icon.png "$_datadir/assets/radio_icon.png" # Não mais aqui
+    install -Dm644 assets/stations.json "$_datadir/assets/stations.json"
+    echo "Recursos de dados copiados para $_datadir/assets"
+
+    # Instalar o script executável (wrapper)
+    # O script wrapper será criado em /usr/bin no sistema final
+    install -d "$pkgdir/usr/bin"
+    # Cria um wrapper simples para lançar a aplicação usando o módulo
+    # Usar python -m garante que o PYTHONPATH esteja correto
+    cat > "$pkgdir/usr/bin/$_pkgname" << EOF
+#!/bin/sh
+# Executa o main.py dentro do módulo radio_player
+exec python -m radio_player.main "\$@"
+EOF
+    chmod +x "$pkgdir/usr/bin/$_pkgname"
+    echo "Wrapper executável criado em $pkgdir/usr/bin/$_pkgname"
+
+    # Instalar arquivo de licença
+    # Copia o arquivo LICENSE que está dentro de $srcdir/projeto1
+    install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+    echo "Arquivo de licença copiado para $pkgdir/usr/share/licenses/$pkgname/"
+
+    # Instalar arquivo .desktop para o menu de aplicativos
+    # O arquivo .desktop foi adicionado como fonte, então está em $srcdir
+    install -Dm644 "$srcdir/radio-player-simples.desktop" "$pkgdir/usr/share/applications/radio-player-simples.desktop"
+    echo "Arquivo .desktop copiado para $pkgdir/usr/share/applications/"
+
+    # Instalar ícone para o menu de aplicativos (exemplo com tamanho 'scalable')
+    # Copia o ícone de dentro do código fonte extraído
+    install -Dm644 assets/radio_icon.png "$pkgdir/usr/share/icons/hicolor/scalable/apps/radio-player-simples.png"
+    echo "Ícone copiado para $pkgdir/usr/share/icons/hicolor/scalable/apps/"
+
+    echo "Empacotamento concluído."
+}
+
+

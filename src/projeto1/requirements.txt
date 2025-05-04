@@ -1,0 +1,7 @@
+--- a/projeto1/requirements.txt
++++ b/projeto1/requirements.txt
+@@ -1,1 +1,2 @@
+ python-vlc
++# Adicione outras dependências aqui, como a biblioteca de GUI (PyQt5, etc.)
+
+
